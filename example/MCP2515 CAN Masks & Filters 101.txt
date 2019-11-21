@@ -1,0 +1,59 @@
+CAN Masks & Filters 101:
+
+1. The Rx Mask is nothing more than a bit level switch to enable or disable the filter bits.
+Eg/
+(assume 11 bit Id)
+If the Mask is set to a value of 0b00000000111 (0x0007) then only bits 0,1 & 2 of the filter bits will be used to filter the received Id against.
+
+2. The Rx filter is used to check the received CAN Id against. If a match is detected on the active filter bits, then the received CAN message is placed in the Rx buffer, else the CAN message is discarded.
+
+(assume 11 bit Id)
+Eg 1/
+Mask Value: 0b11111111111 (0x03FF) (all filter bits enabled)
+Filter Value: 0b11111111111 (0x03FF)
+The Rx buffer will only receive CAN frames with an Id of 0x03FF
+
+Eg 2/
+Mask Value: 0b11111111111 (0x03FF) (all filter bits enabled)
+Filter Value: 0b11111111110 (0x03FE)
+The Rx buffer will only receive CAN frames with an Id of 0x03FE
+
+Eg 3/
+Mask Value: 0b11111111110 (0x03FE)
+Filter Value: 0b11111111111 (0x03FF)
+The Rx buffer will receive CAN frames with an Id of 0x03FE or 0x03FF as bit 0 of the filter bit is disabled.
+
+Eg 4/
+Mask Value: 0b11111111110 (0x03FE)
+Filter Value: 0b11111111110 (0x03FE)
+The Rx buffer will receive CAN frames with an Id of 0x03FE or 0x03FF as bit 0 of the filter bit is disabled.
+
+Eg 5/
+Mask Value: 0b11111111111 (0x03FF) (all filter bits enabled)
+Filter Value: 0b11111111000 (0x03F8)
+The Rx buffer will only receive CAN frames with an Id of 0x03F8
+
+Eg 6/
+Mask Value: 0b11111111000 (0x03F8)
+Filter Value: 0b11111111000 (0x03F8)
+The Rx buffer will receive CAN frames with an Id of 0x03F8,0x03F9,0x03FA,0x03FB,0x03FC,0x03FD,0x03FE,0x03FF as bit 0,1 & 2 of the filter bits are disabled.
+
+Eg 7/
+Mask Value: 0b11111111111 (0x03FF) (all filter bits enabled)
+Filter Value: 0b00000000000 (0x0000)
+The Rx buffer will only receive CAN frames with an Id of 0x000
+
+Eg 8/
+Mask Value: 0b11111111111 (0x03FF) (all filter bits enabled)
+Filter Value: 0b00000000001 (0x0001)
+The Rx buffer will only receive CAN frames with an Id of 0x001
+
+Eg 9/
+Mask Value: 0b11111111000 (0x03F8)
+Filter Value: 0b00000000000 (0x0000)
+The Rx buffer will receive CAN frames with an Id of 0x000,0x001,0x002,0x003,0x004,0x005,0x006,0x007 as bit 0,1 & 2 of the filter bits are disabled.
+
+Eg 10/
+Mask Value: 0b00000000111 (0x0007)
+Filter Value: 0b00000000000 (0x0000)
+The Rx buffer will receive CAN frames that end either 0,1,2,3,4,5,6,7 (0x121 = accepted, 0x0128 = discarded)
