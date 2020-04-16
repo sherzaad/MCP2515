@@ -13,6 +13,8 @@ ver1.1 - added tCAN modify_message(tCAN *message, uint16_t byte_arr[]) inline fu
 #include <mcp2515_defs.h>
 #include <SPI.h>
 
+#pragma pack(1) // To force compiler to use 1 byte packaging. enforces stricter packaging
+
 #define BIT_CHK(x,y) (((x)&(1<<(y)))>0? 1:0) //returns value selected bit '0' or '1'
 
 typedef struct
@@ -22,13 +24,13 @@ typedef struct
 		struct{
 			uint16_t std;
 			uint16_t stdh;
-		};
+		}__attribute__((packed)); //avoids structure padding 
     } id;
 	struct {
-		int8_t rtr : 1;
+		uint8_t rtr : 1;
 		uint8_t ide : 1; //IDE: IDentifier Extension bit - is '1' for extended frame format with 29-bit identifiers 		
 		uint8_t dlc : 4;
-	} header;
+	}__attribute__((packed))header; //avoids structure padding
 	uint8_t data[8];
 } tCAN;
 
