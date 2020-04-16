@@ -165,7 +165,7 @@ uint8_t MCP2515::CAN_init(uint8_t cnf1, uint8_t cnf2, uint8_t cnf3)
 	pinMode(intr_pin,INPUT);     //MCP2515_INT
 	
 	#ifndef SPI_Init
-		#define SPI_Init 1
+		#define SPI_Init
 		//SPI clock speed:10MHz, Data Shift:MSB First, Data Clock Idle: SPI_MODE0
 		SPI.beginTransaction(SPISettings(10000000,MSBFIRST,SPI_MODE0)); 
 		SPI.begin();
@@ -245,7 +245,7 @@ union {
 	struct{
 		uint16_t std;
 		uint16_t stdh;
-	};
+	}__attribute__((packed));
 } id;
 
   // config mode
@@ -398,7 +398,7 @@ union {
 	struct{
 		uint16_t std;
 		uint16_t stdh;
-	};
+	}__attribute__((packed));
 } id;
 
 uint8_t filter_regs[8] = {RXM0SIDH, RXF0SIDH, RXF1SIDH, RXM1SIDH, RXF2SIDH, RXF3SIDH, RXF4SIDH, RXF5SIDH};
