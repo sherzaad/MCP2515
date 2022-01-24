@@ -1,5 +1,5 @@
 /*
-mcp2515.h - Library for mcp2015 Arduino CAN shield
+mcp2515.h - Library for mcp2515 Arduino CAN shield
 ver1.1 created by Sherzaad Dinah
 
 Revision History
@@ -66,13 +66,6 @@ public:
 			4. Listen-Only mode (MODE_LISTENONLY)
 			5. Loopback mode (MODE_LOOPBACK)
 		*/
-		
-		
-		#ifdef HW_Mode
-			#undef HW_Mode
-		#endif
-		
-		#define HW_Mode
 		mode_chip = mode;
 		
 		bit_modify(CANCTRL, (1 << REQOP2) | (1 << REQOP1) | (1 << REQOP0), mode_chip);
@@ -190,16 +183,13 @@ public:
 	}
 	
 	~MCP2515(){
-		#ifdef SPI_Init
-			#undef SPI_Init
-		#endif
 		SPI.end();
 	}
 
 private:
-	uint8_t cs_pin;
-	uint8_t intr_pin;
-	uint8_t mode_chip;
+	static uint8_t cs_pin;
+	static uint8_t intr_pin;
+	static uint8_t mode_chip;
 
 };
 
