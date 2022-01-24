@@ -34,7 +34,7 @@ uint8_t ex_data[8] ={0x02,0x22,cnt,0xFF,0xFF,0xFF,0xFF,0xFF};
 
   //Initialise CH1 MCP2515 CAN controller at the specified speed
   if (CAN_Ch1.CAN_init(CANSPEED_500kBPS)){
-	CAN_Ch1.set_mode(MODE_NORMAL); //set MCP2515 CAN controller into NORMAL mode (init default if LISTEN_ONLY)
+	CAN_Ch1.set_mode(MODE_NORMAL); //set MCP2515 CAN controller into NORMAL mode (init default mode is LISTEN_ONLY)
     Serial.println("CAN1 Init ok");
   }
   else
