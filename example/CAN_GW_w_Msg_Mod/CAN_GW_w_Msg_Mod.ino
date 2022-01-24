@@ -26,16 +26,20 @@ void setup() {
   }
 
   //Initialise CH1 MCP2515 CAN controller at the specified speed
-  if (CAN_Ch1.CAN_init(CANSPEED_500kBPS))
+  if (CAN_Ch1.CAN_init(CANSPEED_500kBPS)){
     Serial.println("CAN1 Init ok");
+	CAN_Ch1.set_mode(MODE_NORMAL); //set MCP2515 CAN controller into NORMAL mode (init default mode is LISTEN_ONLY)
+  }
   else
     Serial.println("Can't Init CAN1");
 
   CAN_Ch1.set_mode(MODE_NORMAL);
 
   //Initialise CH2 MCP2515 CAN controller at the specified speed
-  if (CAN_Ch2.CAN_init(CANSPEED_500kBPS))
+  if (CAN_Ch2.CAN_init(CANSPEED_500kBPS)){
     Serial.println("CAN2 Init ok");
+    CAN_Ch2.set_mode(MODE_NORMAL); //set MCP2515 CAN controller into NORMAL mode (init default mode is LISTEN_ONLY)
+  }
   else
     Serial.println("Can't Init CAN2");
 
