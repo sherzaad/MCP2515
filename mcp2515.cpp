@@ -1,9 +1,13 @@
 /*
-mcp2515.ccp - Library for mcp2015 Arduino CAN shield
+mcp2515.ccp - Library for mcp2515 Arduino CAN shield
 ver1.0 created by Sherzaad Dinah
 */
 
 #include <mcp2515.h>
+
+uint8_t MCP2515::mode_chip = 1;
+uint8_t MCP2515::cs_pin = 1;
+uint8_t MCP2515::intr_pin = 1;
 
 uint8_t MCP2515::get_message(tCAN *message)
 {
@@ -164,76 +168,74 @@ uint8_t MCP2515::CAN_init(uint8_t cnf1, uint8_t cnf2, uint8_t cnf3)
 	digitalWrite(cs_pin,HIGH);//Deselect Chip
 	pinMode(intr_pin,INPUT);     //MCP2515_INT
 	
-	#ifndef SPI_Init
-		#define SPI_Init
-		//SPI clock speed:10MHz, Data Shift:MSB First, Data Clock Idle: SPI_MODE0
-		SPI.beginTransaction(SPISettings(10000000,MSBFIRST,SPI_MODE0)); 
-		SPI.begin();
-	#endif
+	//SPI clock speed:10MHz, Data Shift:MSB First, Data Clock Idle: SPI_MODE0
+	SPI.beginTransaction(SPISettings(10000000,MSBFIRST,SPI_MODE0)); 
+	SPI.begin();
   
-  // reset MCP2515 by software reset.
-  // After this he is in configuration mode.
-  RESET_CS();
-  SPI.transfer(SPI_RESET);
-  SET_CS();
+	// reset MCP2515 by software reset.
+	// After this he is in configuration mode.
+	RESET_CS();
+	SPI.transfer(SPI_RESET);
+	SET_CS();
   
-  //1ms delay to wait until the MCP2515 has restarted
-  delay(1);
+	//1ms delay to wait until the MCP2515 has restarted
+	delay(1);
   
-  // load CNF1..3 Register
-  RESET_CS();
-  SPI.transfer(SPI_WRITE);
-  SPI.transfer(CNF3);
+	// load CNF1..3 Register
+	RESET_CS();
+	SPI.transfer(SPI_WRITE);
+	SPI.transfer(CNF3);
  
-  SPI.transfer(cnf3);   // Bitrate 250 kbps at 16 MHz
-  SPI.transfer(cnf2);
+	SPI.transfer(cnf3);   // Bitrate 250 kbps at 16 MHz
+	SPI.transfer(cnf2);
 
-  SPI.transfer(cnf1);
+	SPI.transfer(cnf1);
 
-  // activate interrupts
-  SPI.transfer((1<<RX1IE)|(1<<RX0IE));
-  SET_CS();
+	// activate interrupts
+	SPI.transfer((1<<RX1IE)|(1<<RX0IE));
+	SET_CS();
   
-  // test if we could read back the value => is the chip accessible?
-  if (read_register(CNF1) != cnf1) {
-    return 0;
-  }
+	// test if we could read back the value => is the chip accessible?
+	if (read_register(CNF1) != cnf1) {
+		return 0;
+	}
   
-  // deaktivate the RXnBF Pins (High Impedance State)
-  write_register(BFPCTRL, 0);
+	// deaktivate the RXnBF Pins (High Impedance State)
+	write_register(BFPCTRL, 0);
   
-  // set TXnRTS as inputs
-  write_register(TXRTSCTRL, 0);
+	// set TXnRTS as inputs
+	write_register(TXRTSCTRL, 0);
   
-  // turn off filters => receive any message
-  write_register(RXB0CTRL, (1<<RXM1)|(1<<RXM0));
-  write_register(RXB1CTRL, (1<<RXM1)|(1<<RXM0));
+	// turn off filters => receive any message
+	write_register(RXB0CTRL, (1<<RXM1)|(1<<RXM0));
+	write_register(RXB1CTRL, (1<<RXM1)|(1<<RXM0));
   
-  // reset device to MODE_LISTENONLY
-  write_register(CANCTRL, MODE_LISTENONLY);
+	// reset device to MODE_LISTENONLY
+	write_register(CANCTRL, MODE_LISTENONLY);
   
-  return 1;
+	return 1;
 }
 
 uint8_t MCP2515::set_filter_mask(uint8_t mask_reg, uint16_t mask)
 {
-  // config mode
-  if (read_register(CANCTRL) != MODE_CONFIG){
-	write_register(CANCTRL, MODE_CONFIG);
-	if (read_register(CANCTRL) != MODE_CONFIG) return 0;
-  }
+	// config mode
+	if (read_register(CANCTRL) != MODE_CONFIG){
+		write_register(CANCTRL, MODE_CONFIG);
+		if (read_register(CANCTRL) != MODE_CONFIG) return 0;
+	}
   
-  uint8_t data[4] = {(mask >> 3),(mask << 5),0,0};
+	uint8_t data[4] = {(mask >> 3),(mask << 5),0,0};
   
-  write_register(mask_reg, data, 4); 
+	write_register(mask_reg, data, 4); 
   
-  #ifdef HW_Mode
+	if(mode_chip!=1){
 	//reset device initial set mode
 	write_register(CANCTRL, mode_chip);
-  #else
+	}
+	else{
     //reset device to MODE_LISTENONLY
     write_register(CANCTRL, MODE_LISTENONLY);
-  #endif
+	}
   
   return 1;
 }
@@ -248,25 +250,26 @@ union {
 	}__attribute__((packed));
 } id;
 
-  // config mode
-  if (read_register(CANCTRL) != MODE_CONFIG){
-	write_register(CANCTRL, MODE_CONFIG);
-	if (read_register(CANCTRL) != MODE_CONFIG) return 0;
-  }
+	// config mode
+	if (read_register(CANCTRL) != MODE_CONFIG){
+		write_register(CANCTRL, MODE_CONFIG);
+		if (read_register(CANCTRL) != MODE_CONFIG) return 0;
+	}
 
-  id.ex = mask;
+	id.ex = mask;
   
-  uint8_t data[4] = {(id.stdh >> 5),((id.stdh << 3)&0xE0)|(id.stdh&0x03),(id.std >> 8),id.std};
+	uint8_t data[4] = {(id.stdh >> 5),((id.stdh << 3)&0xE0)|(id.stdh&0x03),(id.std >> 8),id.std};
   
-  write_register(mask_reg, data, 4); 
+	write_register(mask_reg, data, 4); 
   
-  #ifdef HW_Mode
+	if(mode_chip!=1){
 	//reset device initial set mode
 	write_register(CANCTRL, mode_chip);
-  #else
+	}
+	else{
     //reset device to MODE_LISTENONLY
     write_register(CANCTRL, MODE_LISTENONLY);
-  #endif
+	}
   
   return 1;
 }
@@ -275,29 +278,30 @@ uint8_t MCP2515::enable_filter()
 {
 uint8_t rxbnctrl;
 
-  // config mode
-  if (read_register(CANCTRL) != MODE_CONFIG){
-	write_register(CANCTRL, MODE_CONFIG);
-	if (read_register(CANCTRL) != MODE_CONFIG) return 0;
-  }
+	// config mode
+	if (read_register(CANCTRL) != MODE_CONFIG){
+		write_register(CANCTRL, MODE_CONFIG);
+		if (read_register(CANCTRL) != MODE_CONFIG) return 0;
+	}
+	  
   
-  
-  // turn on filters => Receive all valid messages using either standard or extended identifiers that meet filter criteria
-  rxbnctrl = (~((1<<RXM1)|(1<<RXM0))) & read_register(RXB0CTRL);
+	// turn on filters => Receive all valid messages using either standard or extended identifiers that meet filter criteria
+	rxbnctrl = (~((1<<RXM1)|(1<<RXM0))) & read_register(RXB0CTRL);
 	
-  write_register(RXB0CTRL,rxbnctrl);
+	write_register(RXB0CTRL,rxbnctrl);
 	
-  rxbnctrl = (~((1<<RXM1)|(1<<RXM0))) & read_register(RXB1CTRL);
+	rxbnctrl = (~((1<<RXM1)|(1<<RXM0))) & read_register(RXB1CTRL);
 	
-  write_register(RXB1CTRL,rxbnctrl);
+	write_register(RXB1CTRL,rxbnctrl);
 	
-  #ifdef HW_Mode
+	if(mode_chip!=1){
 	//reset device initial set mode
 	write_register(CANCTRL, mode_chip);
-  #else
+	}
+	else{
     //reset device to MODE_LISTENONLY
     write_register(CANCTRL, MODE_LISTENONLY);
-  #endif
+	}
   
   return 1;
 }
@@ -380,13 +384,14 @@ uint8_t u_bound, rxbnctrl, i=0, j=0;
 	
 	write_register(RXB1CTRL,rxbnctrl);
 	
-  #ifdef HW_Mode
+	if(mode_chip!=1){
 	//reset device initial set mode
 	write_register(CANCTRL, mode_chip);
-  #else
+	}
+	else{
     //reset device to MODE_LISTENONLY
     write_register(CANCTRL, MODE_LISTENONLY);
-  #endif
+	}
 	
 	return 1;
 }
@@ -441,13 +446,14 @@ uint8_t u_bound, rxbnctrl, i=0, k=0;
 	
 	write_register(RXB1CTRL,rxbnctrl);
 	
-  #ifdef HW_Mode
+	if(mode_chip!=1){
 	//reset device initial set mode
 	write_register(CANCTRL, mode_chip);
-  #else
+	}
+	else{
     //reset device to MODE_LISTENONLY
     write_register(CANCTRL, MODE_LISTENONLY);
-  #endif
+	}
 	
 	return 1;
 }	
